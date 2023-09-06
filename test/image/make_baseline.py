@@ -10,6 +10,11 @@ elif len(sys.argv) > 1 :
     args = sys.argv
 
 root = os.getcwd()
+
+virtual_webgl = os.path.join(root, 'node_modules', 'virtual-webgl', 'src', 'virtual-webgl.js')
+plotlyjs = os.path.join(root, 'build', 'plotly.js')
+plotlyjs_with_virtual_webgl = os.path.join(root, 'build', 'plotly_with_virtual-webgl.js')
+
 dirIn = os.path.join(root, 'test', 'image', 'mocks')
 dirOut = os.path.join(root, 'build', 'test_images')
 
@@ -33,8 +38,21 @@ if 'mathjax3' in sys.argv or 'mathjax3=' in sys.argv :
     mathjax_version = 3
     print('Kaleido using MathJax v3')
 
+virtual_webgl_version = 0 # i.e. virtual-webgl is not used
+if 'virtual-webgl' in sys.argv or 'virtual-webgl=' in sys.argv :
+    virtual_webgl_version = 1
+    print('using virtual-webgl for WebGL v1')
+
+    with open(plotlyjs_with_virtual_webgl, 'w') as fileOut:
+        for filename in [virtual_webgl, plotlyjs]:
+            with open(filename, 'r') as fileIn:
+                for line in fileIn:
+                    fileOut.write(line)
+
+    plotlyjs = plotlyjs_with_virtual_webgl
+
+pio.kaleido.scope.plotlyjs = plotlyjs
 pio.templates.default = 'none'
-pio.kaleido.scope.plotlyjs = os.path.join(root, 'build', 'plotly.js')
 
 _credentials = open(os.path.join(root, 'build', 'credentials.json'), 'r')
 pio.kaleido.scope.mapbox_access_token = json.load(_credentials)['MAPBOX_ACCESS_TOKEN']
@@ -82,6 +100,11 @@ blacklist = [
     'mapbox_custom-style' # Figure out why needed this in https://github.com/plotly/plotly.js/pull/6610
 ]
 allNames = [a for a in allNames if a not in blacklist]
+
+# skip mapbox mocks in virtual-webgl test
+# until we could figure out a fix to make mapbox baselines using Kaleido and virtual-webgl
+if virtual_webgl_version > 0 :
+    allNames = [a for a in allNames if not a.startswith('mapbox')]
 
 if len(allNames) == 0 :
     print('error: Nothing to create!')
