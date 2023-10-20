@@ -38,18 +38,14 @@ if 'mathjax3' in sys.argv or 'mathjax3=' in sys.argv :
     mathjax_version = 3
     print('Kaleido using MathJax v3')
 
-virtual_webgl_version = 0 # i.e. virtual-webgl is not used
-if 'virtual-webgl' in sys.argv or 'virtual-webgl=' in sys.argv :
-    virtual_webgl_version = 1
-    print('using virtual-webgl for WebGL v1')
+virtual_webgl_version = 1
+with open(plotlyjs_with_virtual_webgl, 'w') as fileOut:
+    for filename in [virtual_webgl, plotlyjs]:
+        with open(filename, 'r') as fileIn:
+            for line in fileIn:
+                fileOut.write(line)
 
-    with open(plotlyjs_with_virtual_webgl, 'w') as fileOut:
-        for filename in [virtual_webgl, plotlyjs]:
-            with open(filename, 'r') as fileIn:
-                for line in fileIn:
-                    fileOut.write(line)
-
-    plotlyjs = plotlyjs_with_virtual_webgl
+plotlyjs = plotlyjs_with_virtual_webgl
 
 pio.kaleido.scope.plotlyjs = plotlyjs
 pio.templates.default = 'none'
